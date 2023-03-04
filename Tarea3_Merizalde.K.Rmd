@@ -1,0 +1,185 @@
+---
+title: "Tarea3-Visualiación"
+author: "Jonier Merizalde"
+date: "2023-03-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r packages}
+#install.packages("ggrepel")
+require("ggrepel")
+library(readr)
+library(RCurl)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(forcats)
+library(data.table)
+library(devtools)
+
+```
+
+```{r otherfunct, include=FALSE}
+ggtexttable()
+```
+
+
+```{r plot1A}
+#pro algún motivo el archivo original da problemas con la variable model //procedo con csv
+df_cars<-fread("C:/2_R4DA/Vsiaucización/mtcars.csv")
+
+pt1<-df_cars %>% 
+  filter (cyl == "4" |cyl == "6" | cyl == "8") %>%  
+  mutate(cyl = as.factor(cyl)) %>% 
+  arrange(cyl,mpg) %>% 
+  mutate(model=factor(model,levels=model)) %>% 
+ggplot(aes(x=model,y=mpg, fill=cyl))+
+  geom_col()+
+  scale_fill_manual(values=c("#0066CC","#F5C710","gray"))+
+  theme_classic()+
+   theme(legend.position="top")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+pt1
+```
+
+```{r Plot1F}
+df_diam<-diamonds
+
+pt2<-df_diam %>% 
+  select(depth,cut) %>% 
+ggplot(aes(x=depth, colour=cut, fill=cut))+
+  geom_density(alpha=0.25,linetype = 1)+
+  scale_x_continuous(limits = c(58, 68), breaks = c(57.5, 60, 62.5, 65 ,67.5))+
+    theme_bw()+
+  theme(legend.position="bottom")+
+  theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+pt2
+```
+
+```{r plot1B}
+set.seed(42)
+n<-1000
+x<-runif(n) * 3
+y<-x* sin(1/x) +rnorm(n)/ 25
+
+df1b<-data.frame(x=x, y=y)
+
+pt3<-ggplot(df1b,aes(x,y))+
+  geom_point(alpha=0.7, col="blue")+
+  geom_smooth(se=FALSE)+
+  scale_x_continuous(limits = c(0,0.5))+
+  scale_y_continuous(limits = c(-0.3,0.4))+
+  theme_bw()
+
+pt3
+```
+
+```{r plot1c}
+df_tg<-fread("C:/2_R4DA/Vsiaucización/ToothGrowth.csv")
+df_tg$dose <- as.factor(df_tg$dose)
+
+pt4<-ggpar(
+  ggdotplot(df_tg, "dose", "len", fill = "white", color = "dose",
+            palette = "jco"),
+            legend = "right")
+pt4
+```
+
+```{r plot1d}
+df_cars2<-fread("C:/2_R4DA/Vsiaucización/mtcars.csv")
+
+df_cars2$cyl<-as.factor(df_cars2$cyl)
+
+pt5<-df_cars2 %>% 
+  ggscatter(x = "wt", y = "mpg",
+      add = "reg.line",                   
+      conf.int = TRUE,                 
+      color = "cyl", palette = "jco",        
+      shape = "cyl")+
+  stat_cor(aes(color = cyl), label.x = 3)   
+
+pt5
+```
+
+```{r plot1E}
+pt6<-ggplot(faithfuld, aes(waiting, eruptions)) +
+  geom_raster(aes(fill = density), interpolate = TRUE)+
+   scale_fill_distiller(palette = "YlOrRd", direction = 1)+ 
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+  
+pt6
+```
+
+```{r}
+multi = ggarrange(pt1,
+                  ggarrange(pt2,
+                            ggarrange(pt3,pt4,pt5,pt6, nrow=2,ncol = 2,
+                                      labels=c("B","C","D","E")),
+                            ncol=2,labels="F"),
+                  nrow=2,labels="A")
+multi
+
+ggsave(filename = "multiplot.pdf",height = 14,width = 14, plot = multi, dpi = 300)
+
+```
+
+
+
+```{r plot2}
+ruta <- "https://raw.githubusercontent.com/martintinch0/CienciaDeDatosParaCuriosos/master/data/gapminder.csv"
+df_gapminder <- read.table(file = ruta, sep=';', header = TRUE, stringsAsFactors = FALSE)
+head(df_gapminder, 2)
+
+# Gráfico inicial exploratorio
+pt7<-df_gapminder %>% 
+  filter (year=="2007") %>%
+  ggplot(aes(x = gdpPercap, y = lifeExp, size=pop, color=continent)) +
+  geom_point()+
+  labs(x = "Ingreso promedio (USD)",
+       y = "Expectativa de vida al nacer (años)",
+       title="Esperanza de vida debido al ingreso promedio - 2007",
+       caption="Fuente: Gapminder",
+       color="Continente: ")+
+  theme(legend.position="bottom",legend.title=element_text(face="bold",color="black",size=10), 
+        panel.background = element_rect(fill = "white", colour = "grey80"), 
+        panel.grid.major = element_line(colour = "grey90", linetype = "dotted"))+
+  geom_text_repel(aes(label = country),size = 3.5) +
+  guides(size="none")
+
+pt7
+
+pt8<-df_gapminder %>% 
+  filter (year=="2007") %>%
+  ggplot(aes(x = gdpPercap, y = lifeExp, size=pop, color=continent)) +
+  geom_point()+
+  labs(x = NULL, y=NULL)+
+  scale_x_continuous(limits = c(6000,8000))+
+  scale_y_continuous(limits = c(65,80))+
+  theme(legend.position="none",legend.title=element_text(face="bold",color="black",size=10), 
+        panel.background = element_rect(fill = "white", colour = "grey80"), 
+        panel.grid.major = element_line(colour = "grey90", linetype = "dotted"))+
+  geom_text_repel(aes(label = country),size = 3.5) +
+  guides(size="none")
+
+pt8
+
+pt9<-ggplotGrob(pt8)
+
+multi2<-pt7 + annotation_custom(grob=pt9, xmin = 30000, xmax = 50000, 
+                       ymin = 40, ymax = 60)
+
+ggsave(filename = "multiplot2.pdf",height = 14,width = 14, plot = multi2, dpi = 300)
+
+```
+
+
+
+
+
