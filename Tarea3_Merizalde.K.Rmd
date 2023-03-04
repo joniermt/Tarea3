@@ -20,12 +20,6 @@ library(ggplot2)
 library(ggpubr)
 library(forcats)
 library(data.table)
-library(devtools)
-
-```
-
-```{r otherfunct, include=FALSE}
-ggtexttable()
 ```
 
 
@@ -174,6 +168,7 @@ pt9<-ggplotGrob(pt8)
 
 multi2<-pt7 + annotation_custom(grob=pt9, xmin = 30000, xmax = 50000, 
                        ymin = 40, ymax = 60)
+multi2
 
 ggsave(filename = "multiplot2.pdf",height = 14,width = 14, plot = multi2, dpi = 300)
 
